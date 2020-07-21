@@ -1,0 +1,19 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+tox = "*"
+pytest = "*"
+pytest-mock = "*"
+pytest-cov = "*"
+pytest-asyncio = "*"
+isort = "*"
+flake8 = "*"
+
+[packages]
+pydispatcher = "*"
+
+[requires]
+python_version = "3.7"
