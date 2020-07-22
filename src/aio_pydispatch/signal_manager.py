@@ -1,7 +1,7 @@
 import asyncio
 import functools
 import logging
-from typing import Any, Awaitable, Callable, List, TypeVar, Union
+from typing import Awaitable, Callable, List, TypeVar, Union, Any
 
 from pydispatch import dispatcher, robustapply
 from pydispatch.dispatcher import getAllReceivers, liveReceivers
@@ -14,12 +14,14 @@ logger = logging.getLogger(__name__)
 class SignalManager:
 
     def __init__(self, sender=dispatcher.Anonymous):
-        self.sender = sender
+        self._sender = sender
 
     def connect(
             self,
-            receiver: Union[Callable[..., Awaitable], Callable[..., T]],
+            receiver: Callable[..., Union[T, Awaitable]],
             signal: Any,
+            *,
+            weak: bool = True,
             **kwargs: Any
     ) -> None:
         """
@@ -27,27 +29,53 @@ class SignalManager:
         when send this signal, this event will be trigger.
         :param receiver:
         :param signal:
+        :param weak:
         :param kwargs:
-            sender:
-            weak:
+            sender: Any, default dispatcher.Any
         :return:
         """
-        kwargs.setdefault('sender', self.sender)
-        dispatcher.connect(receiver, signal, **kwargs)
+        kwargs.setdefault('sender', self._sender)
+        dispatcher.connect(receiver, signal, weak=weak, **kwargs)
+
+    def connect_via(
+            self,
+            signal: Any,
+            *,
+            weak: bool = True,
+            **kwargs: Any
+    ):
+        """
+        Decorate func to connect a signal.
+        :param signal:
+        :param weak:
+        :param kwargs:
+            sender Any, default dispatcher.Any
+        :return:
+        """
+
+        def _decorator(func: Callable[..., Union[T, Awaitable]]):
+            self.connect(func, signal, weak=weak, **kwargs)
+
+            return func
+
+        return _decorator
 
     async def send(self, signal: Any, **kwargs: Any) -> List:
         """
         Sends a signal to trigger the event to which it is connected.
         :param signal:
         :param kwargs:
+            sender: Any, default dispatcher.Any
+            dont_log: Optional[Exception]
+            ...     other kwargs will pass func.
         :return:
         """
-        kwargs.setdefault('sender', self.sender)
+        kwargs.setdefault('sender', self._sender)
         return await send(signal, **kwargs)
 
     def disconnect(
             self,
-            receiver: Union[Callable[..., Awaitable], Callable[..., T]],
+            receiver: Callable[..., Union[T, Awaitable]],
             signal: Any,
             **kwargs: Any
     ) -> None:
@@ -58,7 +86,7 @@ class SignalManager:
         :param kwargs:
         :return:
         """
-        kwargs.setdefault('sender', self.sender)
+        kwargs.setdefault('sender', self._sender)
         dispatcher.disconnect(receiver, signal, **kwargs)
 
     def disconnect_all(self, signal: Any, **kwargs: Any) -> None:
@@ -66,9 +94,10 @@ class SignalManager:
         Disconnect all event from signal.
         :param signal:
         :param kwargs:
+            sender: Any, default dispatcher.Any
         :return:
         """
-        kwargs.setdefault('sender', self.sender)
+        kwargs.setdefault('sender', self._sender)
         disconnect_all(signal, **kwargs)
 
 
@@ -77,7 +106,7 @@ class _IgnoredException(Exception):
 
 
 def disconnect_all(signal=dispatcher.Any, sender=dispatcher.Any) -> None:
-    for receiver in liveReceivers(getAllReceivers(sender, signal)):
+    for receiver in list(liveReceivers(getAllReceivers(sender, signal))):
         dispatcher.disconnect(receiver, signal=signal, sender=sender)
 
 

@@ -2,98 +2,84 @@ import asyncio
 
 import pytest
 from pydispatch import dispatcher
+from pydispatch.dispatcher import getAllReceivers, getReceivers
 
 from aio_pydispatch.signal_manager import SignalManager
-
-start_signal = object()
-
-
-def start(x):
-    return x
-
-
-async def async_start(x):
-    await asyncio.sleep(0)
-    return x
 
 
 class TestSignalManager:
 
     @pytest.fixture()
-    def signal_manager(self):
+    def signal(self):
+        yield object()
+
+    @pytest.fixture()
+    def signal_manager(self, signal):
         sm = SignalManager(self)
         yield sm
-        sm.disconnect_all(start_signal)
+        sm.disconnect_all(signal)
 
-    @pytest.fixture()
-    def signal_manager_connected_async(self, signal_manager):
-        signal_manager.connect(async_start, start_signal)
-        yield signal_manager
-        signal_manager.disconnect_all(start_signal)
+    def test_disconnect(self, signal_manager, signal, start, async_start):
+        assert len(getReceivers(self, signal)) == 0
 
-    @pytest.fixture()
-    def signal_manager_connected_sync(self, signal_manager):
-        signal_manager.connect(start, start_signal)
-        yield signal_manager
-        signal_manager.disconnect_all(start_signal)
+        signal_manager.connect(start, signal)
+        assert len(getReceivers(self, signal)) == 1
 
-    def test_connect(self, signal_manager):
-        signal_manager.connect(start, start_signal)
-        assert len(dispatcher.connections) == 1
+        signal_manager.connect(async_start, signal)
+        assert len(getReceivers(self, signal)) == 2
 
-    def test_disconnect(self, signal_manager):
-        assert len(dispatcher.connections) == 0
+        signal_manager.disconnect(async_start, signal)
+        assert len(getReceivers(self, signal)) == 1
 
-        signal_manager.connect(start, start_signal)
-        assert len(dispatcher.connections) == 1
+        signal_manager.disconnect(start, signal)
+        assert len(getReceivers(self, signal)) == 0
 
-        signal_manager.disconnect(async_start, start_signal)
-        assert len(dispatcher.connections) == 1
+    def test_disconnect_all(self, signal_manager, signal, start, async_start):
+        signal_manager.connect(start, signal)
+        signal_manager.connect(async_start, signal)
 
-        signal_manager.disconnect(start, start_signal)
-        assert len(dispatcher.connections) == 0
+        assert len(getReceivers(self, signal)) == 2
 
-    def test_disconnect_all(self, signal_manager):
-        assert len(dispatcher.connections) == 0
-
-        signal_manager.connect(start, start_signal)
-        assert len(dispatcher.connections) == 1
-
-        signal_manager.disconnect_all(start_signal)
-        assert len(dispatcher.connections) == 0
+        signal_manager.disconnect_all(signal)
+        assert len(getReceivers(self, signal)) == 0
 
     @pytest.mark.asyncio
-    async def test_send_async(self, signal_manager_connected_async):
-        res = await signal_manager_connected_async.send(start_signal, x='foo')
-        assert (async_start, 'foo') in res
+    @pytest.mark.parametrize(
+        ('mode_async',),
+        [
+            (True,),
+            (True,),
+        ]
+    )
+    async def test_send(self, signal_manager, signal, start, async_start, mode_async):
+        func = async_start if mode_async else start
+        signal_manager.connect(func, signal)
+        res = await signal_manager.send(signal, x='foo')
+        assert (func, 'foo') in res
 
     @pytest.mark.asyncio
-    async def test_send_sync(self, signal_manager_connected_sync):
-        res = await signal_manager_connected_sync.send(start_signal, x='foo')
-        assert (start, 'foo') in res
-
-    @pytest.mark.asyncio
-    async def test_send_async_exception(self, signal_manager, caplog):
+    @pytest.mark.parametrize(
+        ('dont_log',),
+        [
+            (True,),
+            (False,)
+        ]
+    )
+    async def test_send_catch_log(self, signal_manager, signal, dont_log, caplog):
         e = ValueError('xxx')
 
         async def demo(x):
             raise e
 
-        signal_manager.connect(demo, start_signal)
+        signal_manager.connect(demo, signal)
 
-        res = await signal_manager.send(start_signal, x='foo')
+        kwargs = {
+            'x': 'foo'
+        }
+
+        if dont_log is False:
+            kwargs.update({'dont_log': e.__class__})
+
+        res = await signal_manager.send(signal, **kwargs)
         assert (demo, e) in res
-        assert 'Caught an error on signal handler: ' in caplog.text
-
-    @pytest.mark.asyncio
-    async def test_send_async_exception_dont_log(self, signal_manager, caplog):
-        e = ValueError('xxx')
-
-        async def demo(x):
-            raise e
-
-        signal_manager.connect(demo, start_signal)
-
-        res = await signal_manager.send(start_signal, x='foo', dont_log=ValueError)
-        assert (demo, e) in res
-        assert 'Caught an error on signal handler: ' not in caplog.text
+        assert ('Caught an error on signal handler: ' in caplog.text) == dont_log
