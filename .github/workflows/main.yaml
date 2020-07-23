@@ -37,29 +37,29 @@ jobs:
         include:
           - name: windows-py37
             python: "3.7"
-            os: windows
+            os: windows-latest
             tox_env: py37
           - name: windows-py38
             python: "3.8"
-            os: windows
+            os: windows-latest
             tox_env: py37
 
           - name: ubuntu-py37
             python: "3.7"
-            os: ubuntu
+            os: ubuntu-latest
             tox_env: py37
           - name: ubuntu-py38
             python: "3.8"
-            os: ubuntu
+            os: ubuntu-latest
             tox_env: py37
 
           - name: macos-py37
             python: "3.7"
-            os: macos
+            os: macos-latest
             tox_env: py37
           - name: macos-py38
             python: "3.8"
-            os: macos
+            os: macos-latest
             tox_env: py37
 
     steps:
