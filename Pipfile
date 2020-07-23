@@ -13,7 +13,6 @@ isort = "*"
 flake8 = "*"
 
 [packages]
-pydispatcher = "*"
 
 [requires]
 python_version = "3.7"

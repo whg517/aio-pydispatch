@@ -1,4 +1,4 @@
-__version__ = '0.0.1.dev0'
+__version__ = '0.0.1.dev1'
 
 from aio_pydispatch.signal import Signal
 

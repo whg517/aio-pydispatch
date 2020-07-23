@@ -14,81 +14,27 @@ Init some signals and a signal manager
 
 ```python
 import asyncio
-import logging
-from aio_pydispatch import SignalManager
 
-logging.basicConfig(level=logging.INFO)
+from aio_pydispatch import Signal
 
-server_start = object()
-server_stop = object()
+server_start = Signal('server_start')
+server_stop = Signal('server_stop')
 
-signal_manager = SignalManager()
-```
 
-Do something when signal is trigger. Another expression: the signal subscribe the event
+def ppp(value: str) -> None:
+    print(value)
 
-```python
-def start(data: str) -> None:
-    # Do something when server is start.
-    logging.info(f'started. {data}')
 
-def stop(data: str) -> None:
-    # Do something when server is stop.
-    logging.info(f'stoped. {data}')
-
-signal_manager.connect(start, server_start)
-signal_manager.connect(start, server_stop)
-```
-
-Let's run fake server.
-
-```python
-
-async def run():
-    await signal_manager.send(server_start, data=f'xxx')
-    await asyncio.sleep(5)
-    await signal_manager.send(server_stop, data=f'xxx')
+async def main():
+    server_start.connect(ppp)
+    server_stop.connect(ppp)
+    await server_start.send('server start')
+    await asyncio.sleep(1)
+    await server_stop.send('server stop')
 
 
 if __name__ == '__main__':
-    asyncio.run(run())
-```
-
-There is all code:
-
-```python
-import asyncio
-import logging
-from aio_pydispatch import SignalManager
-
-logging.basicConfig(level=logging.INFO)
-
-
-def start(data: str) -> None:
-    logging.info(f'started. {data}')
-
-
-def stop(data: str) -> None:
-    logging.info(f'stopped. {data}')
-
-
-server_start = object()
-server_stop = object()
-
-signal_manager = SignalManager()
-
-signal_manager.connect(start, server_start)
-signal_manager.connect(start, server_stop)
-
-
-async def run():
-    await signal_manager.send(server_start, data=f'xxx')
-    await asyncio.sleep(5)
-    await signal_manager.send(server_stop, data=f'xxx')
-
-
-if __name__ == '__main__':
-    asyncio.run(run())
+    asyncio.run(main())
 ```
 
 ## Similar design
