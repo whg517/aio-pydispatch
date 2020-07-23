@@ -75,7 +75,7 @@ jobs:
           pip install tox
       - name: test
         run: |
-          tox -e ${{ matrix.tox_env }}
+          tox -e py
 
   linting:
     runs-on: ubuntu-latest
