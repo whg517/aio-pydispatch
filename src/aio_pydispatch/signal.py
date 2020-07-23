@@ -3,7 +3,6 @@ import functools
 import logging
 import threading
 import weakref
-from asyncio import AbstractEventLoop
 from typing import Awaitable, Callable, List, Optional, TypeVar, Union
 
 from aio_pydispatch.utils import make_id, safe_ref
