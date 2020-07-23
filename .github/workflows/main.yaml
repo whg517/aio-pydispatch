@@ -63,20 +63,20 @@ jobs:
             os: macos
             tox_env: py37
 
-      steps:
-        - uses: actions/checkout@v2
-          with:
-            fetch-depth: 0
-        - name: Set up Python ${{ matrix.python }}
-          uses: actions/setup-python@v2
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v2
 
-        - name: Install dependencies
-          run: |
-            python -m pip install --upgrade pip
-            pip install tox
-        - name: test
-          run: |
-            tox -e {{ matrix.tox_env }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install tox
+      - name: test
+        run: |
+          tox -e {{ matrix.tox_env }}
 
   linting:
     runs-on: ubuntu-latest
