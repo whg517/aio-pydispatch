@@ -1,0 +1,116 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: main
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+    tags:
+      - "*"
+
+  pull_request:
+    branches:
+      - master
+      - develop
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        name: [
+          "windows-py37",
+          "windows-py38",
+          "ubuntu-py37",
+
+          "ubuntu-py38",
+          "ubuntu-py39",
+
+          "macos-py37",
+          "macos-py38",
+        ]
+
+        include:
+          - name: windows-py37
+            python: "3.7"
+            os: windows
+            tox_env: py37
+          - name: windows-py38
+            python: "3.8"
+            os: windows
+            tox_env: py37
+
+          - name: ubuntu-py37
+            python: "3.7"
+            os: ubuntu
+            tox_env: py37
+          - name: ubuntu-py38
+            python: "3.8"
+            os: ubuntu
+            tox_env: py37
+
+          - name: macos-py37
+            python: "3.7"
+            os: macos
+            tox_env: py37
+          - name: macos-py38
+            python: "3.8"
+            os: macos
+            tox_env: py37
+
+      steps:
+        - uses: actions/checkout@v2
+          with:
+            fetch-depth: 0
+        - name: Set up Python ${{ matrix.python }}
+          uses: actions/setup-python@v2
+
+        - name: Install dependencies
+          run: |
+            python -m pip install --upgrade pip
+            pip install tox
+        - name: test
+          run: |
+            tox -e {{ matrix.tox_env }}
+
+  linting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - run: pip install tox
+      - run: tox -e linting
+
+  deploy:
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags') && github.repository == 'whg517/aio_pydispatch'
+
+    runs-on: ubuntu-latest
+
+    needs: [build]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --upgrade wheel setuptools
+      - name: Build package
+        run: |
+          python setup.py sdist bdist_wheel
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.test_pypi_token }}
+          repository_url: https://test.pypi.org/legacy/
