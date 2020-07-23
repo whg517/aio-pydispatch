@@ -23,12 +23,9 @@ class Signal:
             self,
             name: Optional[str] = None,
             doc: Optional[str] = None,
-            loop: Optional[AbstractEventLoop] = None
     ):
         self._name = name
         self._doc = doc
-
-        self._loop = loop or asyncio.get_event_loop()
 
         self.__lock = threading.Lock()
 
@@ -61,6 +58,7 @@ class Signal:
     async def send(self, *args, **kwargs):
         _dont_log = kwargs.pop('_dont_log', _IgnoredException)
         responses = []
+        loop = asyncio.get_running_loop()
         for receiver in self._live_receivers():
             func = functools.partial(
                 receiver,
@@ -71,7 +69,7 @@ class Signal:
                 if asyncio.iscoroutinefunction(receiver):
                     response = await func()
                 else:
-                    response = await self._loop.run_in_executor(None, func)
+                    response = await loop.run_in_executor(None, func)
             except _dont_log as e:
                 response = e
             except Exception as e:
