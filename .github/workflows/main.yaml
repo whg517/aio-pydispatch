@@ -24,25 +24,25 @@ jobs:
       fail-fast: false
       matrix:
         name: [
-          "windows-py37",
-          "windows-py38",
+#          "windows-py37",
+#          "windows-py38",
 
           "ubuntu-py37",
           "ubuntu-py38",
 
-          "macos-py37",
-          "macos-py38",
+#          "macos-py37",
+#          "macos-py38",
         ]
 
         include:
-          - name: windows-py37
-            python: "3.7"
-            os: windows-latest
-            tox_env: py37
-          - name: windows-py38
-            python: "3.8"
-            os: windows-latest
-            tox_env: py37
+#          - name: windows-py37
+#            python: "3.7"
+#            os: windows-latest
+#            tox_env: py37
+#          - name: windows-py38
+#            python: "3.8"
+#            os: windows-latest
+#            tox_env: py37
 
           - name: ubuntu-py37
             python: "3.7"
@@ -53,14 +53,14 @@ jobs:
             os: ubuntu-latest
             tox_env: py37
 
-          - name: macos-py37
-            python: "3.7"
-            os: macos-latest
-            tox_env: py37
-          - name: macos-py38
-            python: "3.8"
-            os: macos-latest
-            tox_env: py37
+#          - name: macos-py37
+#            python: "3.7"
+#            os: macos-latest
+#            tox_env: py37
+#          - name: macos-py38
+#            python: "3.8"
+#            os: macos-latest
+#            tox_env: py37
 
     steps:
       - uses: actions/checkout@v2
