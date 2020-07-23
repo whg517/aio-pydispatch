@@ -27,8 +27,8 @@ jobs:
           "windows-py37",
           "windows-py38",
 
+          "ubuntu-py37",
           "ubuntu-py38",
-          "ubuntu-py39",
 
           "macos-py37",
           "macos-py38",
@@ -83,7 +83,9 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
       - run: pip install tox
-      - run: tox -e linting
+      - run: |
+          tox -e isort
+          tox -e flake8
 
   deploy:
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags') && github.repository == 'whg517/aio_pydispatch'
