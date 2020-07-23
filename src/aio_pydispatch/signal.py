@@ -1,68 +1,112 @@
-from typing import Callable, Awaitable, Union, TypeVar, Any
+import asyncio
+import functools
+import logging
+import threading
+import weakref
+from asyncio import AbstractEventLoop
+from typing import Awaitable, Callable, List, Optional, TypeVar, Union
 
-from aio_pydispatch import SignalManager
+from aio_pydispatch.utils import make_id, safe_ref
 
 T = TypeVar('T')
+
+logger = logging.getLogger(__name__)
+
+
+class _IgnoredException(Exception):
+    """Ignore exception"""
 
 
 class Signal:
 
-    def __init__(self, name: str = 'Anonymous'):
-        self._signal_manager = SignalManager(self.__class__)
+    def __init__(
+            self,
+            name: Optional[str] = None,
+            doc: Optional[str] = None,
+            loop: Optional[AbstractEventLoop] = None
+    ):
         self._name = name
+        self._doc = doc
+
+        self._loop = loop or asyncio.get_event_loop()
+
+        self.__lock = threading.Lock()
+
+        self.__should_clear_receiver = False
+
+        self._receivers = {}
 
     def connect(
             self,
             receiver: Callable[..., Union[T, Awaitable]],
-            **kwargs,
     ):
         """
+        Connect a receiver on this signal
         :param receiver:
-        :param kwargs:
-            sender: Any, default dispatcher.Any
         :return:
         """
-        self._signal_manager.connect(receiver, self, **kwargs)
+        assert callable(receiver), "Signal receivers must be callable."
 
-    def connect_via(self, **kwargs):
-        """
-        :param kwargs:
-            sender: Any, default dispatcher.Any
-        :return:
-        """
+        receiver = safe_ref(receiver, self._set_should_clear_receiver, value=True)
 
-        def _decorator(func: Callable[..., Union[T, Awaitable]]):
-            self.connect(func, **kwargs)
+        lookup_key = make_id(receiver)
 
-            return func
+        with self.__lock:
+            self._clear_dead_receivers()
 
-        return _decorator
+            if lookup_key not in self._receivers:
+                self._receivers.setdefault(lookup_key, receiver)
+            self._set_should_clear_receiver(False)
 
-    async def send(self, **kwargs: Any):
-        """
-        :param kwargs:
-            sender: Any, default dispatcher.Any
-        :return:
-        """
-        await self._signal_manager.send(self, **kwargs)
+    async def send(self, *args, **kwargs):
+        _dont_log = kwargs.pop('_dont_log', _IgnoredException)
+        responses = []
+        for receiver in self._live_receivers():
+            func = functools.partial(
+                receiver,
+                *args,
+                **kwargs
+            )
+            try:
+                if asyncio.iscoroutinefunction(receiver):
+                    response = await func()
+                else:
+                    response = await self._loop.run_in_executor(None, func)
+            except _dont_log as e:
+                response = e
+            except Exception as e:
+                response = e
+                logger.error(f'Caught an error on {receiver}', exc_info=True)
+            responses.append((receiver, response))
 
-    def disconnect(
-            self,
-            receiver: Callable[..., Union[T, Awaitable]],
-            **kwargs,
-    ):
-        """
-        :param receiver:
-        :param kwargs:
-            sender: Any, default dispatcher.Any
-        :return:
-        """
-        self._signal_manager.disconnect(receiver, self, **kwargs)
+        return responses
 
-    def disconnect_all(self, **kwargs):
-        """
-        :param kwargs:
-            sender: Any, default dispatcher.Any
-        :return:
-        """
-        self._signal_manager.disconnect_all(self, **kwargs)
+    def _live_receivers(self) -> List[Callable[..., Union[T, Awaitable]]]:
+        with self.__lock:
+            receivers = []
+            _receiver = self._receivers.copy()
+            for lookup_key, receiver in _receiver.items():
+                if isinstance(receiver, weakref.ReferenceType):
+                    real_receiver = receiver()
+                    if real_receiver is None:
+                        self._receivers.pop(lookup_key)
+                    else:
+                        receivers.append(real_receiver)
+            return receivers
+
+    def _set_should_clear_receiver(self, value: bool) -> None:
+        self.__should_clear_receiver = value
+
+    def _clear_dead_receivers(self):
+        if self.__should_clear_receiver:
+            _receiver = self._receivers.copy()
+            for lookup_key, receiver in _receiver.items():
+                if isinstance(receiver, weakref.ReferenceType) and receiver() is not None:
+                    continue
+                self._receivers.pop(lookup_key)
+
+    def disconnect(self, receiver):
+        self._receivers.pop(make_id(receiver))
+
+    def disconnect_all(self):
+        self._receivers.clear()

@@ -1,8 +1,5 @@
 import asyncio
-from typing import Any, Callable, Generator
-import functools
 import pytest
-from pydispatch.dispatcher import getReceivers
 
 
 @pytest.fixture()
