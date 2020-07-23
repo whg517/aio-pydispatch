@@ -26,7 +26,6 @@ jobs:
         name: [
           "windows-py37",
           "windows-py38",
-          "ubuntu-py37",
 
           "ubuntu-py38",
           "ubuntu-py39",
