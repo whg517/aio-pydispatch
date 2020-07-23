@@ -11,6 +11,7 @@ pytest-cov = "*"
 pytest-asyncio = "*"
 isort = "*"
 flake8 = "*"
+atomicwrites = "*"
 
 [packages]
 
