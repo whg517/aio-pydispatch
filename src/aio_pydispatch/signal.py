@@ -3,7 +3,8 @@ import functools
 import logging
 import threading
 import weakref
-from typing import Awaitable, Callable, List, Optional, TypeVar, Union
+from typing import (Any, Awaitable, Callable, List, Optional, Tuple, TypeVar,
+                    Union)
 
 from aio_pydispatch.utils import make_id, safe_ref
 
@@ -35,7 +36,7 @@ class Signal:
     def connect(
             self,
             receiver: Callable[..., Union[T, Awaitable]],
-    ):
+    ) -> None:
         """
         Connect a receiver on this signal
         :param receiver:
@@ -54,7 +55,7 @@ class Signal:
                 self._receivers.setdefault(lookup_key, receiver)
             self._set_should_clear_receiver(False)
 
-    async def send(self, *args, **kwargs):
+    async def send(self, *args, **kwargs) -> List[Tuple[Any, Any]]:
         _dont_log = kwargs.pop('_dont_log', _IgnoredException)
         responses = []
         loop = asyncio.get_running_loop()
@@ -69,6 +70,29 @@ class Signal:
                     response = await func()
                 else:
                     response = await loop.run_in_executor(None, func)
+            except _dont_log as e:
+                response = e
+            except Exception as e:
+                response = e
+                logger.error(f'Caught an error on {receiver}', exc_info=True)
+            responses.append((receiver, response))
+
+        return responses
+
+    def sync_send(self, *args, **kwargs) -> List[Tuple[Any, Any]]:
+        """
+        Can only trigger sync func. If func is coroutine function, it will return a awaitable object.
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        _dont_log = kwargs.pop('_dont_log', _IgnoredException)
+        responses = []
+        for receiver in self._live_receivers():
+            try:
+                if asyncio.iscoroutinefunction:
+                    logger.warning(f'{receiver} is coroutine, but it not awaited')
+                response = receiver(*args, **kwargs)
             except _dont_log as e:
                 response = e
             except Exception as e:
@@ -94,7 +118,7 @@ class Signal:
     def _set_should_clear_receiver(self, value: bool) -> None:
         self.__should_clear_receiver = value
 
-    def _clear_dead_receivers(self):
+    def _clear_dead_receivers(self) -> None:
         if self.__should_clear_receiver:
             _receiver = self._receivers.copy()
             for lookup_key, receiver in _receiver.items():
@@ -102,8 +126,8 @@ class Signal:
                     continue
                 self._receivers.pop(lookup_key)
 
-    def disconnect(self, receiver):
+    def disconnect(self, receiver) -> None:
         self._receivers.pop(make_id(receiver))
 
-    def disconnect_all(self):
+    def disconnect_all(self) -> None:
         self._receivers.clear()
