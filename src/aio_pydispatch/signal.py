@@ -36,12 +36,13 @@ class Signal:
     def connect(
             self,
             receiver: Callable[..., Union[T, Awaitable]],
-    ) -> None:
+    ) -> Callable[..., Union[T, Awaitable]]:
         """
         Connect a receiver on this signal
         :param receiver:
         :return:
         """
+        original_receiver = receiver
         assert callable(receiver), "Signal receivers must be callable."
 
         receiver = safe_ref(receiver, self._set_should_clear_receiver, value=True)
@@ -54,6 +55,7 @@ class Signal:
             if lookup_key not in self._receivers:
                 self._receivers.setdefault(lookup_key, receiver)
             self._set_should_clear_receiver(False)
+        return original_receiver
 
     async def send(self, *args, **kwargs) -> List[Tuple[Any, Any]]:
         _dont_log = kwargs.pop('_dont_log', _IgnoredException)
