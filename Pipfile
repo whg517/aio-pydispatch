@@ -10,8 +10,8 @@ pytest-mock = "*"
 pytest-cov = "*"
 pytest-asyncio = "*"
 isort = "*"
-flake8 = "*"
 atomicwrites = "*"
+pylint = "*"
 
 [packages]
 

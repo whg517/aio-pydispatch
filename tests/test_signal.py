@@ -1,116 +1,135 @@
+"""Test signal"""
 import inspect
 
 import pytest
 
-from aio_pydispatch.signal import Signal
-
 
 class Foo:
+    """Mock class"""
 
-    def start(self): ...
+    def start(self):
+        """foo start"""
 
 
-class TestSignal:
+def test_connect(signal, start, async_start):
+    """Test connect"""
+    assert len(signal.receivers) == 0
 
-    @pytest.fixture()
-    def signal(self):
-        signal = Signal()
-        yield signal
-        signal.disconnect_all()
+    foo1 = Foo()
+    foo2 = Foo()
+    signal.connect(foo1.start)
+    signal.connect(foo2.start)
+    assert len(signal.live_receivers) == 2
+    del foo1
 
-    def test_connect(self, signal, start, async_start):
-        assert len(signal._receivers) == 0
+    signal.connect(start)
 
-        foo1 = Foo()
-        foo2 = Foo()
-        signal.connect(foo1.start)
-        signal.connect(foo2.start)
-        assert len(signal._live_receivers()) == 2
-        del foo1
+    signal.connect(async_start)
 
-        signal.connect(start)
+    del foo2
+    assert len(signal.live_receivers) == 2
 
-        signal.connect(async_start)
+    signal.disconnect(start)
+    assert len(signal.live_receivers) == 1
+    signal.disconnect_all()
+    assert len(signal.live_receivers) == 0
 
-        del foo2
-        assert len(signal._live_receivers()) == 2
 
-        signal.disconnect(start)
-        assert len(signal._live_receivers()) == 1
-        signal.disconnect_all()
-        assert len(signal._live_receivers()) == 0
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ('mode_async',),
+    [
+        (True,),
+        (False,),
+    ]
+)
+async def test_send(signal, start, async_start, mode_async):
+    """Test send"""
+    func = async_start if mode_async else start
+    signal.connect(func)
+    responses = await signal.send(name=1)
+    assert (func, 1) in responses
 
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ('mode_async',),
-        [
-            (True,),
-            (False,),
-        ]
-    )
-    async def test_send(self, signal, start, async_start, mode_async):
-        func = async_start if mode_async else start
-        signal.connect(func)
-        responses = await signal.send(x=1)
-        assert (func, 1) in responses
 
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        ('_dont_log', 'mode_async'),
-        [
-            (True, True),
-            (True, False),
-            (False, True),
-            (False, False),
-        ]
-    )
-    async def test_send_error(self, signal, start_error, async_start_error, error, _dont_log, mode_async, caplog):
-        func = async_start_error if mode_async else start_error
-        kwargs = {'x': 1}
-        if _dont_log:
-            kwargs.update({'_dont_log': error.__class__})
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ('_ignored_exception', 'mode_async'),
+    [
+        (True, True),
+        (True, False),
+        (False, True),
+        (False, False),
+    ]
+)
+async def test_send_error(
+        signal,
+        start_error,
+        async_start_error,
+        error,
+        _ignored_exception,
+        mode_async,
+        caplog
+):
+    """Test send error"""
+    func = async_start_error if mode_async else start_error
+    signal.connect(func)
 
-        signal.connect(func)
-        await signal.send(**kwargs)
-        assert not (f'Caught an error on {func}' in caplog.text) == _dont_log
+    if _ignored_exception:
+        await signal.send(1, _ignored_exception=error.__class__)
+        assert f'Caught an error on {func}' not in caplog.text
+    else:
+        await signal.send(1)
+        assert f'Caught an error on {func}' in caplog.text
 
-    @pytest.mark.filterwarnings('ignore')
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        'mode_async',
-        [True, False]
-    )
-    def test_sync_send(self, signal, start, async_start, mode_async, caplog):
-        func = async_start if mode_async else start
-        signal.connect(func)
-        responses = signal.sync_send(x=1)
-        for receiver, response in responses:
-            if not mode_async:
-                assert response == 1
-                assert 'but it not awaited' not in caplog.text
-            if receiver == async_start:
-                assert inspect.isawaitable(response)
-                assert f'{receiver} is coroutine, but it not awaited' in caplog.text
 
-    @pytest.mark.filterwarnings('ignore')
-    @pytest.mark.parametrize(
-        ('_dont_log', 'mode_async'),
-        [
-            (True, True),
-            (True, False),
-            (False, True),
-            (False, False),
-        ]
-    )
-    def test_sync_send_error(self, signal, start_error, async_start_error, error, _dont_log, mode_async, caplog):
-        func = async_start_error if mode_async else start_error
-        kwargs = {'x': 1}
-        if _dont_log:
-            kwargs.update({'_dont_log': error.__class__})
+@pytest.mark.filterwarnings('ignore')
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'mode_async',
+    [True, False]
+)
+def test_sync_send(signal, start, async_start, mode_async, caplog):
+    """Test sync send"""
+    func = async_start if mode_async else start
+    signal.connect(func)
+    responses = signal.sync_send(name=1)
+    for receiver, response in responses:
+        if not mode_async:
+            assert response == 1
+            assert 'but it not awaited' not in caplog.text
+        if receiver == async_start:
+            assert inspect.isawaitable(response)
+            assert f'{receiver} is coroutine, but it not awaited' in caplog.text
 
-        signal.connect(func)
-        signal.sync_send(**kwargs)
+
+@pytest.mark.filterwarnings('ignore')
+@pytest.mark.parametrize(
+    ('_ignored_exception', 'mode_async'),
+    [
+        (True, True),
+        (True, False),
+        (False, True),
+        (False, False),
+    ]
+)
+def test_sync_send_error(
+        signal,
+        start_error,
+        async_start_error,
+        error,
+        _ignored_exception,
+        mode_async,
+        caplog
+):
+    """Test sync send error"""
+    func = async_start_error if mode_async else start_error
+    signal.connect(func)
+    if _ignored_exception:
+        signal.sync_send(1, _ignored_exception=error.__class__)
+        assert f'Caught an error on {func}' not in caplog.text
+    else:
+        signal.sync_send(1)
         if mode_async:
-            assert not (f'Caught an error on {func}' in caplog.text)
+            assert f'{func} is coroutine, but it not awaited' in caplog.text
         else:
-            assert not (f'Caught an error on {func}' in caplog.text) == _dont_log
+            assert f'Caught an error on {func}' in caplog.text

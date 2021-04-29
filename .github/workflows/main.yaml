@@ -85,7 +85,7 @@ jobs:
       - run: pip install tox
       - run: |
           tox -e isort
-          tox -e flake8
+          tox -e pylint
 
   deploy:
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags') && github.repository == 'whg517/aio-pydispatch'
