@@ -1,16 +1,22 @@
+"""Tests"""
 import asyncio
 
 import pytest
 
+from aio_pydispatch.signal import Signal
 
-@pytest.fixture()
-def error():
+
+@pytest.fixture(name='error')
+def fixture_error():
+    """Error fixture"""
     yield ValueError('foo')
 
 
 @pytest.fixture()
 def start_error(error):
-    def _(x):
+    """start error fixture"""
+
+    def _(_name: str):
         raise error
 
     return _
@@ -18,7 +24,9 @@ def start_error(error):
 
 @pytest.fixture()
 def async_start_error(error):
-    async def _(x):
+    """async start error fixture"""
+
+    async def _(_name: str):
         raise error
 
     return _
@@ -26,16 +34,28 @@ def async_start_error(error):
 
 @pytest.fixture()
 def start():
-    def _(x):
-        return x
+    """start fixture"""
+
+    def _(name: str):
+        return name
 
     return _
 
 
 @pytest.fixture()
 def async_start():
-    async def _(x):
+    """async start fixture"""
+
+    async def _(name):
         await asyncio.sleep(0)
-        return x
+        return name
 
     return _
+
+
+@pytest.fixture()
+def signal():
+    """Signal fixture"""
+    _signal = Signal()
+    yield _signal
+    _signal.disconnect_all()
