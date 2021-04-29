@@ -1,5 +1,9 @@
 # aio_pydispatch
 
+![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/whg517/aio-pydispatch/main/main?style=flat-square)
+![GitHub](https://img.shields.io/github/license/whg517/aio-pydispatch?style=flat-square)
+![PyPI](https://img.shields.io/pypi/v/aio_pydispatch?style=flat-square)
+
 Asyncio pydispatch (Signal Manager)
 
 This is based on [pyDispatcher](http://pydispatcher.sourceforge.net/) reference
