@@ -75,13 +75,19 @@ class TestSignal:
         assert not (f'Caught an error on {func}' in caplog.text) == _dont_log
 
     @pytest.mark.filterwarnings('ignore')
-    def test_sync_send(self, signal, start, async_start, caplog):
-        signal.connect(start)
-        signal.connect(async_start)
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        'mode_async',
+        [True, False]
+    )
+    def test_sync_send(self, signal, start, async_start, mode_async, caplog):
+        func = async_start if mode_async else start
+        signal.connect(func)
         responses = signal.sync_send(x=1)
         for receiver, response in responses:
-            if receiver == start:
+            if not mode_async:
                 assert response == 1
+                assert 'but it not awaited' not in caplog.text
             if receiver == async_start:
                 assert inspect.isawaitable(response)
                 assert f'{receiver} is coroutine, but it not awaited' in caplog.text
