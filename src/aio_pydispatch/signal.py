@@ -92,7 +92,7 @@ class Signal:
         responses = []
         for receiver in self._live_receivers():
             try:
-                if asyncio.iscoroutinefunction:
+                if asyncio.iscoroutinefunction(receiver):
                     logger.warning(f'{receiver} is coroutine, but it not awaited')
                 response = receiver(*args, **kwargs)
             except _dont_log as e:
