@@ -24,8 +24,9 @@ logger = logging.getLogger(__name__)
 
 
 class _IgnoredException(Exception):
-
-    """Ignore exception."""
+    """
+    Ignore exception.
+    """
 
 
 class Signal:

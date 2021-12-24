@@ -7,7 +7,9 @@ from aio_pydispatch.signal import connect
 
 
 class Foo:
-    """Mock class."""
+    """
+    Mock class.
+    """
 
     def start(self, **kwargs):
         """Foo start."""
