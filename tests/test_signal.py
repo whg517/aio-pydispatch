@@ -1,4 +1,4 @@
-"""Test signal"""
+"""Test signal."""
 import inspect
 
 import pytest
@@ -7,7 +7,7 @@ from aio_pydispatch.signal import connect
 
 
 class Foo:
-    """Mock class"""
+    """Mock class."""
 
     def start(self, **kwargs):
         """Foo start."""
