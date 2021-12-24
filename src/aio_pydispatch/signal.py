@@ -1,5 +1,4 @@
-"""
-Asyncio pydispatch (Signal Manager)
+"""Asyncio pydispatch (Signal Manager)
 
 This is based on [pyDispatcher](http://pydispatcher.sourceforge.net/) reference
 [Django Signals](https://docs.djangoproject.com/en/4.0/topics/signals/) and reference
@@ -24,12 +23,13 @@ logger = logging.getLogger(__name__)
 
 
 class _IgnoredException(Exception):
+
     """Ignore exception."""
 
 
 class Signal:
     """
-    Signal, or event
+    Signal, or event.
 
     example:
         import asyncio
@@ -58,6 +58,7 @@ class Signal:
     """
 
     def __init__(self):
+        """Signal, or event."""
         self.__lock = threading.Lock()
         self.__clean_receiver = False
 
@@ -65,7 +66,7 @@ class Signal:
 
     @property
     def receivers(self):
-        """Receivers"""
+        """Receivers."""
         return self._all_receivers
 
     def connect(
@@ -170,7 +171,7 @@ class Signal:
             return real_receivers
 
     def _enable_clean_receiver(self) -> None:
-        """Register to the receiver weakerf finalize callback"""
+        """Register to the receiver weakerf finalize callback."""
         self.__clean_receiver = True
 
     def _clean_dead_receivers(self) -> None:

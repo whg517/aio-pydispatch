@@ -56,14 +56,14 @@ if __name__ == '__main__':
 
 sync
 
-- [pyDispatcher](http://pydispatcher.sourceforge.net/)
-- [Django.dispatch](https://github.com/django/django/tree/master/django/dispatch)
-- [scrapy SignalManager](https://docs.scrapy.org/en/latest/topics/signals.html)
-- [blinker](https://pythonhosted.org/blinker/)
+  - [pyDispatcher](http://pydispatcher.sourceforge.net/)
+  - [Django.dispatch](https://github.com/django/django/tree/master/django/dispatch)
+  - [scrapy SignalManager](https://docs.scrapy.org/en/latest/topics/signals.html)
+  - [blinker](https://pythonhosted.org/blinker/)
 
 async
 
-- [Aiohttp tracing](https://github.com/aio-libs/aiohttp/blob/master/aiohttp/tracing.py)
+  - [Aiohttp tracing](https://github.com/aio-libs/aiohttp/blob/master/aiohttp/tracing.py)
 
 ## Others
 
