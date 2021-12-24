@@ -4,6 +4,7 @@
 ![GitHub](https://img.shields.io/github/license/whg517/aio-pydispatch?style=flat-square)
 ![PyPI](https://img.shields.io/pypi/v/aio_pydispatch?style=flat-square)
 [![codecov](https://codecov.io/gh/whg517/aio-pydispatch/branch/main/graph/badge.svg?token=YF339UJGAD)](https://codecov.io/gh/whg517/aio-pydispatch)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/ccb3b0e652e04496872f2477af5078eb)](https://www.codacy.com/gh/whg517/aio-pydispatch/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=whg517/aio-pydispatch&amp;utm_campaign=Badge_Grade)
 
 Asyncio pydispatch (Signal Manager)
 

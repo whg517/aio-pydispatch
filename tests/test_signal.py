@@ -10,11 +10,11 @@ class Foo:
     """Mock class"""
 
     def start(self, **kwargs):
-        """foo start"""
+        """Foo start."""
 
 
 def test_connect(signal, start, async_start):
-    """Test connect"""
+    """Test connect."""
     assert len(signal.receivers) == 0
 
     foo1 = Foo()
@@ -38,9 +38,9 @@ def test_connect(signal, start, async_start):
 
 
 def test_connect_error(signal):
-    """Test signal connect a no kwargs receiver"""
+    """Test signal connect a no kwargs receiver."""
     def _(_a, *_args):
-        """foo"""
+        """Some func."""
 
     with pytest.raises(ValueError):
         signal.connect(_)
@@ -55,7 +55,7 @@ def test_connect_error(signal):
     ]
 )
 async def test_send(signal, start, async_start, mode_async):
-    """Test send"""
+    """Test send."""
     func = async_start if mode_async else start
     signal.connect(func)
     responses = await signal.send(name=1)
@@ -81,7 +81,7 @@ async def test_send_error(
         mode_async,
         caplog
 ):
-    """Test send error"""
+    """Test send error."""
     func = async_start_error if mode_async else start_error
     signal.connect(func)
 
@@ -100,7 +100,7 @@ async def test_send_error(
     [True, False]
 )
 def test_sync_send(signal, start, async_start, mode_async, caplog):
-    """Test sync send"""
+    """Test sync send."""
     func = async_start if mode_async else start
     signal.connect(func)
     responses = signal.sync_send(name=1)
@@ -132,7 +132,7 @@ def test_sync_send_error(
         mode_async,
         caplog
 ):
-    """Test sync send error"""
+    """Test sync send error."""
     func = async_start_error if mode_async else start_error
     signal.connect(func)
     if _ignored_exception:
@@ -147,9 +147,9 @@ def test_sync_send_error(
 
 
 def test_connect_decorator(signal):
-    """Test connect decorator"""
+    """Test connect decorator."""
     @connect(signal)
     def _(**_kwargs):
-        """fpp"""
+        """Some func."""
 
     assert len(signal.receivers) == 1
