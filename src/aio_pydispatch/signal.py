@@ -1,4 +1,5 @@
-"""Asyncio pydispatch (Signal Manager)
+"""
+Asyncio pydispatch (Signal Manager)
 
 This is based on [pyDispatcher](http://pydispatcher.sourceforge.net/) reference
 [Django Signals](https://docs.djangoproject.com/en/4.0/topics/signals/) and reference
