@@ -13,12 +13,7 @@ def func_accepts_kwargs(func: Callable[..., Any]):
 
 
 def ref_adapter(receiver: T) -> Union[T, weakref.ReferenceType]:
-    """
-    Adapt a receiver to ref object.
-
-    :param receiver:
-    :return:
-    """
+    """Adapt a receiver to ref object."""
     ref = weakref.ref
     receiver_obj = receiver
 
