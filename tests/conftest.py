@@ -6,28 +6,28 @@ import pytest
 from aio_pydispatch.signal import Signal
 
 
-@pytest.fixture(name='error')
-def fixture_error():
+@pytest.fixture()
+def error_kls():
     """Error fixture"""
-    yield ValueError('foo')
+    yield ValueError
 
 
 @pytest.fixture()
-def start_error(error):
+def start_error(error_kls):
     """start error fixture"""
 
-    def _(_name: str):
-        raise error
+    def _(name: str, **kwargs):
+        raise error_kls(name, kwargs)
 
     return _
 
 
 @pytest.fixture()
-def async_start_error(error):
+def async_start_error(error_kls):
     """async start error fixture"""
 
-    async def _(_name: str):
-        raise error
+    async def _(name: str, **kwargs):
+        raise error_kls(name, kwargs)
 
     return _
 
@@ -36,8 +36,8 @@ def async_start_error(error):
 def start():
     """start fixture"""
 
-    def _(name: str):
-        return name
+    def _(name: str, **kwargs):
+        return name, kwargs
 
     return _
 
@@ -46,9 +46,9 @@ def start():
 def async_start():
     """async start fixture"""
 
-    async def _(name):
+    async def _(name, **kwargs):
         await asyncio.sleep(0)
-        return name
+        return name, kwargs
 
     return _
 
