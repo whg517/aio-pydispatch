@@ -3,6 +3,7 @@
 ![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/whg517/aio-pydispatch/main/main?style=flat-square)
 ![GitHub](https://img.shields.io/github/license/whg517/aio-pydispatch?style=flat-square)
 ![PyPI](https://img.shields.io/pypi/v/aio_pydispatch?style=flat-square)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/7ae42457cadc4f12a3e4f8fc21cd7c9e)](https://app.codacy.com/gh/whg517/aio-pydispatch?utm_source=github.com&utm_medium=referral&utm_content=whg517/aio-pydispatch&utm_campaign=Badge_Grade_Settings)
 [![codecov](https://codecov.io/gh/whg517/aio-pydispatch/branch/main/graph/badge.svg?token=YF339UJGAD)](https://codecov.io/gh/whg517/aio-pydispatch)
 
 Asyncio pydispatch (Signal Manager)
