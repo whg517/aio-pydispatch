@@ -12,6 +12,7 @@ pytest-asyncio = "*"
 isort = "*"
 atomicwrites = "*"
 pylint = "*"
+pylint-pytest = "*"
 
 [packages]
 

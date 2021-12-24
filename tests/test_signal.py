@@ -3,11 +3,13 @@ import inspect
 
 import pytest
 
+from aio_pydispatch.signal import connect
+
 
 class Foo:
     """Mock class"""
 
-    def start(self):
+    def start(self, **kwargs):
         """foo start"""
 
 
@@ -19,7 +21,7 @@ def test_connect(signal, start, async_start):
     foo2 = Foo()
     signal.connect(foo1.start)
     signal.connect(foo2.start)
-    assert len(signal.live_receivers) == 2
+    assert len(signal.live_receivers()) == 2
     del foo1
 
     signal.connect(start)
@@ -27,12 +29,21 @@ def test_connect(signal, start, async_start):
     signal.connect(async_start)
 
     del foo2
-    assert len(signal.live_receivers) == 2
+    assert len(signal.live_receivers()) == 2
 
     signal.disconnect(start)
-    assert len(signal.live_receivers) == 1
+    assert len(signal.live_receivers()) == 1
     signal.disconnect_all()
-    assert len(signal.live_receivers) == 0
+    assert len(signal.live_receivers()) == 0
+
+
+def test_connect_error(signal):
+    """Test signal connect a no kwargs receiver"""
+    def _(_a, *_args):
+        """foo"""
+
+    with pytest.raises(ValueError):
+        signal.connect(_)
 
 
 @pytest.mark.asyncio
@@ -48,7 +59,7 @@ async def test_send(signal, start, async_start, mode_async):
     func = async_start if mode_async else start
     signal.connect(func)
     responses = await signal.send(name=1)
-    assert (func, 1) in responses
+    assert (func, (1, {})) in responses
 
 
 @pytest.mark.asyncio
@@ -65,7 +76,7 @@ async def test_send_error(
         signal,
         start_error,
         async_start_error,
-        error,
+        error_kls,
         _ignored_exception,
         mode_async,
         caplog
@@ -75,10 +86,10 @@ async def test_send_error(
     signal.connect(func)
 
     if _ignored_exception:
-        await signal.send(1, _ignored_exception=error.__class__)
+        await signal.send(name='foo', _ignored_exception=error_kls)
         assert f'Caught an error on {func}' not in caplog.text
     else:
-        await signal.send(1)
+        await signal.send(name='foo')
         assert f'Caught an error on {func}' in caplog.text
 
 
@@ -95,7 +106,7 @@ def test_sync_send(signal, start, async_start, mode_async, caplog):
     responses = signal.sync_send(name=1)
     for receiver, response in responses:
         if not mode_async:
-            assert response == 1
+            assert response == (1, {})
             assert 'but it not awaited' not in caplog.text
         if receiver == async_start:
             assert inspect.isawaitable(response)
@@ -116,7 +127,7 @@ def test_sync_send_error(
         signal,
         start_error,
         async_start_error,
-        error,
+        error_kls,
         _ignored_exception,
         mode_async,
         caplog
@@ -125,11 +136,20 @@ def test_sync_send_error(
     func = async_start_error if mode_async else start_error
     signal.connect(func)
     if _ignored_exception:
-        signal.sync_send(1, _ignored_exception=error.__class__)
+        signal.sync_send(name='foo', _ignored_exception=error_kls)
         assert f'Caught an error on {func}' not in caplog.text
     else:
-        signal.sync_send(1)
+        signal.sync_send(name='foo')
         if mode_async:
             assert f'{func} is coroutine, but it not awaited' in caplog.text
         else:
             assert f'Caught an error on {func}' in caplog.text
+
+
+def test_connect_decorator(signal):
+    """Test connect decorator"""
+    @connect(signal)
+    def _(**_kwargs):
+        """fpp"""
+
+    assert len(signal.receivers) == 1

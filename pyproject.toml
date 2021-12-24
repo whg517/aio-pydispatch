@@ -6,6 +6,9 @@ build-backend = "setuptools.build_meta"
 testpaths = "tests"
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
 
+[tool.pylint.MASTER]
+load-plugins = ['pylint_pytest']
+
 [tool.pylint.design]
 max-args = 10
 max-attributes = 10
