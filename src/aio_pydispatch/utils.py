@@ -1,4 +1,4 @@
-"""Utils"""
+"""Utils."""
 import inspect
 import weakref
 from typing import Any, Callable, TypeVar, Union
@@ -14,7 +14,8 @@ def func_accepts_kwargs(func: Callable[..., Any]):
 
 def ref_adapter(receiver: T) -> Union[T, weakref.ReferenceType]:
     """
-    Adapt a receiver to ref object
+    Adapt a receiver to ref object.
+
     :param receiver:
     :return:
     """
@@ -36,7 +37,8 @@ def safe_ref(
 ) -> weakref.ReferenceType:
     """
     Save ref a receiver, and return a weak reference object.
-    Register a callback function to the object finalizer
+    Register a callback function to the object finalizer.
+
     :param receiver:    A callable object
     :param callback:    Register the callback function to the object finalizer.
                         We do not provide positional parameters, you should use high
@@ -51,7 +53,8 @@ def safe_ref(
 def id_maker(target: Any) -> int:
     """
     Get receiver id.
-    If receiver is ref object, will return a ref object id
+    If receiver is ref object, will return a ref object id.
+
     :param target:
     :return: int
     """

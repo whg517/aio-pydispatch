@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class _IgnoredException(Exception):
-    """Ignore exception"""
+    """Ignore exception."""
 
 
 class Signal:
@@ -75,10 +75,11 @@ class Signal:
             weak=True,
     ):
         """
-        Connect a receiver on this signal
-        :param receiver: a callable
-        :param sender: Any default None
-        :param weak: bool Default True
+        Connect a receiver on this signal.
+
+        :param receiver:
+        :param sender:
+        :param weak:
         :return:
         """
         assert callable(receiver), "Signal receivers must be callable."
@@ -181,7 +182,7 @@ class Signal:
                         receivers.pop(receiver_key)
 
     def disconnect(self, receiver: Receiver, sender: Any = None) -> None:
-        """clean receivers of a sender"""
+        """Clean receivers of a sender."""
         lookup_key = id_maker(sender)
         receiver_key = id_maker(receiver)
         with self.__lock:
@@ -198,6 +199,7 @@ class Signal:
 def connect(signal: Signal, sender: Any = None, weak=True):
     """
     Connect decorator.
+
     :param signal:
     :param sender:
     :param weak:
